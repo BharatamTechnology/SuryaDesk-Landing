@@ -622,6 +622,9 @@
       </div>
       <div class="form-card">
         <form id="demoForm">
+          <input type="hidden" name="access_key" value="c7b451f5-c8f5-42ba-b7e9-753c5b338571">
+          <input type="hidden" name="subject" value="New SuryaDesk demo request">
+          <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off">
           <div class="form-row">
             <div class="field">
               <label for="fname">Your name</label>
@@ -655,8 +658,8 @@
             <label for="message">What are you using today?</label>
             <textarea id="message" name="message" rows="3" placeholder="Excel, WhatsApp, another CRM..."></textarea>
           </div>
-          <button type="submit" class="form-submit">Send request</button>
-          <p class="form-hint">Opens your email app with these details filled in, addressed to our team.</p>
+          <button type="submit" class="form-submit" id="submitBtn">Send request</button>
+          <p class="form-hint" id="formHint">We'll get back to you within a day.</p>
         </form>
       </div>
     </div>
@@ -692,24 +695,36 @@
   document.getElementById('demoForm').addEventListener('submit', function(e){
     e.preventDefault();
     var f = e.target;
-    var name = f.fname.value.trim();
-    var company = f.company.value.trim();
-    var phone = f.phone.value.trim();
-    var email = f.email.value.trim();
-    var volume = f.volume.value;
-    var message = f.message.value.trim();
+    var btn = document.getElementById('submitBtn');
+    var hint = document.getElementById('formHint');
 
-    var subject = encodeURIComponent('SuryaDesk demo request — ' + company);
-    var body = encodeURIComponent(
-      'Name: ' + name + '\n' +
-      'Company: ' + company + '\n' +
-      'Phone: ' + phone + '\n' +
-      'Email: ' + email + '\n' +
-      'Projects per month: ' + volume + '\n' +
-      'Currently using: ' + (message || '—') + '\n'
-    );
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
 
-    window.location.href = 'mailto:hemant.tyagi@bharatamtechnology.com?subject=' + subject + '&body=' + body;
+    var formData = new FormData(f);
+
+    fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: formData
+    })
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      if (data.success) {
+        btn.textContent = 'Request sent ✓';
+        hint.textContent = "Thanks — we've received your details and will reach out within a day.";
+        hint.style.color = '#1a7a4c';
+        f.reset();
+      } else {
+        throw new Error(data.message || 'Something went wrong');
+      }
+    })
+    .catch(function(err){
+      btn.disabled = false;
+      btn.textContent = 'Send request';
+      hint.textContent = "Couldn't send — please email us directly at hemant.tyagi@bharatamtechnology.com";
+      hint.style.color = '#c0392b';
+    });
   });
 </script>
 
